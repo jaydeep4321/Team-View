@@ -1,0 +1,10 @@
+<svg width="13" height="13" viewBox="0 0 13 13" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Star">
+  <defs>
+    <!-- Horizontal gradient left (mint) -> right (indigo) -->
+    <linearGradient id="starGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#3CFFB9" />
+      <stop offset="100%" stop-color="#3E51FF" />
+    </linearGradient>
+  </defs>
+  <path d="M6.5 1L8.5 5L12.5 5.75L9.25 9L10 13L6.5 11L3 13L3.75 9L0.5 5.75L4.5 5L6.5 1Z" fill="url(#starGradient)"/>
+</svg>
