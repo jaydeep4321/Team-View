@@ -1,25 +1,26 @@
 import { ClientAppointment } from '@/contexts/AppContext';
 
 export const checkAppointmentConflict = (
-  newAppointment: Partial<ClientAppointment>, 
+  newAppointment: Partial<ClientAppointment>,
   existingAppointments: ClientAppointment[],
   excludeId?: string
 ): { hasConflict: boolean; conflictingAppointments: ClientAppointment[] } => {
-  const conflictingAppointments = existingAppointments.filter(existing => {
-    // Skip if this is the same appointment we're editing
+  const newStart = newAppointment.startHour ?? 0;
+  const newDuration = newAppointment.duration ?? 1;
+  const newEnd = newStart + newDuration;
+
+  const conflictingAppointments = existingAppointments.filter((existing) => {
     if (excludeId && existing.id === excludeId) return false;
-    
-    // Check if same member and overlapping time
-    if (existing.member === newAppointment.member && existing.startHour === newAppointment.startHour) {
-      return true;
-    }
-    
-    return false;
+    if (existing.member !== newAppointment.member) return false;
+    const existingStart = existing.startHour;
+    const existingEnd = existing.startHour + existing.duration;
+    // overlap if max(start) < min(end)
+    return Math.max(newStart, existingStart) < Math.min(newEnd, existingEnd);
   });
 
   return {
     hasConflict: conflictingAppointments.length > 0,
-    conflictingAppointments
+    conflictingAppointments,
   };
 };
 
@@ -115,15 +116,14 @@ export const getStatusBorderColor = (status: 'completed' | 'active' | 'pending')
 };
 
 export const generateTimeSlots = (): Array<{ value: string; label: string; index: number }> => {
-  return [
-    { value: '6:00 am', label: '6:00 AM', index: 0 },
-    { value: '7:00 am', label: '7:00 AM', index: 1 },
-    { value: '8:00 am', label: '8:00 AM', index: 2 },
-    { value: '9:00 am', label: '9:00 AM', index: 3 },
-    { value: '10:00 am', label: '10:00 AM', index: 4 },
-    { value: '11:00 am', label: '11:00 AM', index: 5 },
-    { value: '12:00 pm', label: '12:00 PM', index: 6 },
-    { value: '1:00 pm', label: '1:00 PM', index: 7 },
-    { value: '2:00 pm', label: '2:00 PM', index: 8 }
-  ];
+  // Whole-hour slots from 6:00 AM (index 0) to 6:00 PM (index 12)
+  const slots: Array<{ value: string; label: string; index: number }> = [];
+  for (let i = 0; i <= 12; i += 1) {
+    const hour24 = 6 + i; // 6 .. 18
+    const period = hour24 >= 12 ? 'pm' : 'am';
+    const hour12 = ((hour24 + 11) % 12) + 1;
+    const value = `${hour12}:00 ${period}`;
+    slots.push({ value, label: value.toUpperCase(), index: i });
+  }
+  return slots;
 };

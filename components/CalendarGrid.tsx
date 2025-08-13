@@ -5,6 +5,7 @@ import { ClientAppointment, useApp } from "@/contexts/AppContext";
 import { DndContext, DragEndEvent, pointerWithin } from "@dnd-kit/core";
 import { useDraggable, useDroppable } from "@dnd-kit/core";
 import AppointmentModal from "./AppointmentModal";
+import { checkAppointmentConflict } from "@/utils/appointmentUtils";
 
 // Draggable Appointment Component
 const DraggableAppointment = ({
@@ -81,8 +82,6 @@ const DroppableTimeSlot = ({
     data: { timeIndex, memberIndex },
   });
 
-  console.log({ active: active?.data.current });
-
   return (
     <div
       ref={setNodeRef}
@@ -90,7 +89,7 @@ const DroppableTimeSlot = ({
         isOver ? "bg-blue-50 border-blue-300 border-dashed" : ""
       }`}
       style={{
-        width: `${slotWidth * active?.data.current?.appointment?.duration}px`,
+        width: `${(active?.data.current?.appointment?.duration ?? 1) * slotWidth}px`,
         left: `${timeIndex * slotWidth}px`,
         top: `${memberIndex * 32}px`,
       }}
@@ -104,6 +103,9 @@ const DroppableTimeSlot = ({
 
 export default function CalendarGrid() {
   const { appointments, updateAppointment, teamMembers, statusFilter, teamFilter } = useApp();
+  
+  // Utils
+  // Import conflict detection lazily at top of file
   
   // Filter appointments based on status and team
   const filteredAppointments = appointments.filter(appointment => {
@@ -167,6 +169,17 @@ export default function CalendarGrid() {
       if (dropData) {
         const startHour = dropData.timeIndex; // index in timeSlots
         const duration = appointment.duration; // keep same duration as before
+        const member = dropData.memberIndex + 1;
+
+        // Conflict detection before applying
+        const conflict = checkAppointmentConflict(
+          { member, startHour, duration },
+          appointments,
+          appointment.id
+        );
+        if (conflict.hasConflict) {
+          return; // ignore invalid drop
+        }
 
         // Calculate new start/end times in display format
         const slotToTimeString = (slotIndex: number) => {
@@ -186,7 +199,7 @@ export default function CalendarGrid() {
           startTime,
           endTime,
           duration, // keep same width
-          member: dropData.memberIndex + 1,
+          member,
         });
       }
     }

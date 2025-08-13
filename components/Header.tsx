@@ -4,16 +4,7 @@ import React from "react";
 import { useApp } from "@/contexts/AppContext";
 
 export default function Header() {
-  const {
-    selectedDate,
-    setSelectedDate,
-    activeView,
-    setActiveView,
-    statusFilter,
-    setStatusFilter,
-    assignedFilter,
-    setAssignedFilter,
-  } = useApp();
+  const { selectedDate, setSelectedDate, activeView, setActiveView } = useApp();
   const formatDate = (date: Date) => {
     return date.toLocaleDateString("en-US", {
       month: "long",

@@ -283,9 +283,9 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
 
   // Appointment functions
   const addAppointment = (appointment: ClientAppointment) => {
-    setAppointments((prev) => [
-      ...prev,
-      { ...appointment, id: Date.now().toString() },
+    setAppointments((previousAppointments) => [
+      ...previousAppointments,
+      { ...appointment, id: appointment.id ?? Date.now().toString() },
     ]);
   };
 
@@ -323,6 +323,7 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
         if (parsed.appointments) setAppointments(parsed.appointments);
         if (parsed.jobs) setJobs(parsed.jobs);
         if (parsed.teamMembers) setTeamMembers(parsed.teamMembers);
+        if (parsed.selectedDate) setSelectedDate(new Date(parsed.selectedDate));
       } catch (error) {
         console.error("Error loading saved data:", error);
       }

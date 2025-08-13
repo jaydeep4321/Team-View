@@ -2,9 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 
-import "react-big-calendar/lib/sass/styles.scss";
-import "react-big-calendar/lib/addons/dragAndDrop/styles.scss";
-import "react-big-calendar/lib/css/react-big-calendar.css";
+// Removed unused react-big-calendar styles
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
