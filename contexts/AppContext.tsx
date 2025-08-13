@@ -109,7 +109,7 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
   const [appointments, setAppointments] = useState<ClientAppointment[]>([
     {
       id: "1",
-      clientName: "Hello",
+      clientName: "Acme Corp",
       time: "10:00 am - 12:30 am",
       startTime: "10:00 am",
       endTime: "10:30 am",
@@ -271,7 +271,7 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
   const [activeView, setActiveView] = useState("Team View");
   const [statusFilter, setStatusFilter] = useState("All");
   const [teamFilter, setTeamFilter] = useState("All");
-  const [assignedFilter, setAssignedFilter] = useState("Assigned");
+  const [assignedFilter, setAssignedFilter] = useState("Unassigned");
   const [viewMode, setViewMode] = useState("Day");
   const [timeInterval, setTimeInterval] = useState("1 hour");
 
@@ -314,18 +314,87 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
     );
   };
 
-  // Load from localStorage on mount
+  // Load from localStorage on mount with validation
   useEffect(() => {
     const savedData = localStorage.getItem("teamCalendarData");
     if (savedData) {
       try {
         const parsed = JSON.parse(savedData);
-        if (parsed.appointments) setAppointments(parsed.appointments);
-        if (parsed.jobs) setJobs(parsed.jobs);
-        if (parsed.teamMembers) setTeamMembers(parsed.teamMembers);
-        if (parsed.selectedDate) setSelectedDate(new Date(parsed.selectedDate));
+
+        // Validate appointments
+        if (parsed.appointments && Array.isArray(parsed.appointments)) {
+          const validAppointments = parsed.appointments.filter((apt: any) => {
+            return (
+              apt &&
+              typeof apt.id === "string" &&
+              typeof apt.clientName === "string" &&
+              typeof apt.member === "number" &&
+              typeof apt.startHour === "number" &&
+              typeof apt.duration === "number" &&
+              ["completed", "active", "pending"].includes(apt.status)
+            );
+          });
+          if (validAppointments.length > 0) {
+            setAppointments(validAppointments);
+          }
+        }
+
+        // Validate jobs
+        if (parsed.jobs && Array.isArray(parsed.jobs)) {
+          const validJobs = parsed.jobs.filter((job: any) => {
+            return (
+              job &&
+              typeof job.id === "string" &&
+              typeof job.name === "string" &&
+              typeof job.address === "string" &&
+              typeof job.jobId === "string"
+            );
+          });
+          if (validJobs.length > 0) {
+            setJobs(validJobs);
+          }
+        }
+
+        // Validate team members
+        if (parsed.teamMembers && Array.isArray(parsed.teamMembers)) {
+          const validMembers = parsed.teamMembers.filter((member: any) => {
+            return (
+              member &&
+              typeof member.id === "number" &&
+              typeof member.name === "string" &&
+              typeof member.color === "string"
+            );
+          });
+          if (validMembers.length > 0) {
+            setTeamMembers(validMembers);
+          }
+        }
+
+        // Validate and restore date
+        if (parsed.selectedDate && typeof parsed.selectedDate === "string") {
+          const date = new Date(parsed.selectedDate);
+          if (!isNaN(date.getTime())) {
+            setSelectedDate(date);
+          }
+        }
+
+        // Validate and restore filters
+        if (parsed.statusFilter && typeof parsed.statusFilter === "string") {
+          setStatusFilter(parsed.statusFilter);
+        }
+        if (parsed.teamFilter && typeof parsed.teamFilter === "string") {
+          setTeamFilter(parsed.teamFilter);
+        }
+        if (
+          parsed.assignedFilter &&
+          typeof parsed.assignedFilter === "string"
+        ) {
+          setAssignedFilter(parsed.assignedFilter);
+        }
       } catch (error) {
         console.error("Error loading saved data:", error);
+        // Clear corrupted data
+        localStorage.removeItem("teamCalendarData");
       }
     }
   }, []);

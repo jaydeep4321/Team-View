@@ -154,12 +154,8 @@ export default function JobCards() {
   const [modalJob, setModalJob] = useState<Job | null>(null);
 
   const handleAssignAll = () => {
-    // Create appointments for all unassigned jobs
-    jobs
-      .filter((job) => !job.assignedMember)
-      .forEach((job) => {
-        setModalJob(job);
-      });
+    // TODO: Implement assign all functionality
+    alert('Assign All functionality will be implemented later');
   };
 
   // Filter jobs based on assigned/unassigned status
@@ -171,7 +167,7 @@ export default function JobCards() {
 
   return (
     <>
-      <div className="w-[280px] h-full bg-white border-l border-[#EEEFF1] flex flex-col">
+      <div className="w-[280px] xl:border-l xl:border-[#EEEFF1] h-full bg-white flex flex-col mx-auto xl:mx-0">
         {/* Assigned/Unassigned Tabs */}
         <div className="flex justify-center items-center gap-2 py-3 border-b border-[#EEEFF1]">
           <button
@@ -181,6 +177,7 @@ export default function JobCards() {
                 ? 'bg-[#FAFAFA] border border-[#EEEFF1]'
                 : 'border-none hover:border hover:border-gray-200'
             }`}
+            aria-label="View assigned jobs"
           >
             <span
               className={`font-normal text-xs leading-4 flex items-center tracking-[-0.24px] truncate ${
@@ -200,6 +197,7 @@ export default function JobCards() {
                 ? 'bg-[#FAFAFA] border border-[#EEEFF1]'
                 : 'border-none hover:border hover:border-gray-200'
             }`}
+            aria-label="View unassigned jobs"
           >
             <span
               className={`font-normal text-xs leading-4 flex items-center tracking-[-0.24px] truncate ${
@@ -212,20 +210,23 @@ export default function JobCards() {
             </span>
           </button>
         </div>
-        {/* Assign All Button */}
-        <div className="px-4 py-4">
-          <button
-            onClick={handleAssignAll}
-            className="w-full h-7 bg-[#FAFAFA] border border-[#EEEFF1] rounded-md flex flex-row items-center justify-center gap-2 hover:bg-gray-100 transition-colors"
-          >
-            <span className="font-medium text-sm text-[#232529] whitespace-nowrap">
-              Assign All
-            </span>
-            <div className="w-[13px] h-[13px] relative shrink-0">
-              <Image src="/star.svg" alt="Start" width={13} height={13} />
-            </div>
-          </button>
-        </div>
+        {/* Assign All Button - Only show when viewing Unassigned jobs */}
+        {assignedFilter === 'Unassigned' && (
+          <div className="px-4 py-4">
+            <button
+              onClick={handleAssignAll}
+              className="w-full h-7 bg-[#FAFAFA] border border-[#EEEFF1] rounded-md flex flex-row items-center justify-center gap-2 hover:bg-gray-100 transition-colors"
+              aria-label="Assign all unassigned jobs (coming soon)"
+            >
+              <span className="font-medium text-sm text-[#232529] whitespace-nowrap">
+                Assign All
+              </span>
+              <div className="w-[13px] h-[13px] relative shrink-0">
+                <Image src="/star.svg" alt="Star" width={13} height={13} />
+              </div>
+            </button>
+          </div>
+        )}
 
         {/* Job Cards */}
         <div className="flex flex-col px-4 overflow-y-auto">

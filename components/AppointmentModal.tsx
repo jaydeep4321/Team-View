@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useApp, ClientAppointment } from '@/contexts/AppContext';
 import { checkAppointmentConflict, calculateEndTime, generateTimeSlots } from '@/utils/appointmentUtils';
+import ConfirmDialog from './ConfirmDialog';
 
 interface AppointmentModalProps {
   isOpen: boolean;
@@ -21,6 +22,7 @@ export default function AppointmentModal({
 }: AppointmentModalProps) {
   const { addAppointment, updateAppointment, deleteAppointment, teamMembers, appointments } = useApp();
   type AppointmentStatus = 'completed' | 'active' | 'pending';
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   
   const [formData, setFormData] = useState<{ 
     clientName: string;
@@ -62,6 +64,22 @@ export default function AppointmentModal({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
+    // Form validation
+    if (!formData.clientName.trim()) {
+      alert('Please enter a client name.');
+      return;
+    }
+    
+    if (formData.duration === '' || parseFloat(formData.duration) <= 0) {
+      alert('Please enter a valid duration.');
+      return;
+    }
+    
+    if (parseFloat(formData.duration) > 8) {
+      alert('Duration cannot exceed 8 hours.');
+      return;
+    }
+    
     // Prevent saving if there are conflicts
     if (conflicts.hasConflict) {
       alert('Cannot save appointment due to scheduling conflicts. Please choose a different time or team member.');
@@ -71,8 +89,16 @@ export default function AppointmentModal({
     const endTime = calculateEndTime(formData.startTime, parseFloat(formData.duration));
     const timeOption = timeOptions.find(t => t.value === formData.startTime);
     
+    // Check if appointment extends beyond working hours (6pm)
+    const startHour = timeOption?.index || 3;
+    const endHour = startHour + parseFloat(formData.duration);
+    if (endHour > 12) { // 12 = 6pm (last slot index)
+      alert('Appointment extends beyond working hours (6:00 PM). Please reduce duration or select an earlier time.');
+      return;
+    }
+    
     const appointmentData: Partial<ClientAppointment> = {
-      clientName: formData.clientName,
+      clientName: formData.clientName.trim(),
       time: `${formData.startTime} - ${endTime}`,
       startTime: formData.startTime,
       endTime,
@@ -96,14 +122,20 @@ export default function AppointmentModal({
   };
 
   const handleDelete = () => {
-    if (appointment && confirm('Are you sure you want to delete this appointment?')) {
+    setShowDeleteConfirm(true);
+  };
+  
+  const confirmDelete = () => {
+    if (appointment) {
       deleteAppointment(appointment.id);
+      setShowDeleteConfirm(false);
       onClose();
     }
   };
 
   return (
-    <div className="fixed inset-0 backdrop-blur-[11.75px] flex items-center justify-center z-50">
+    <>
+      <div className="fixed inset-0 backdrop-blur-[11.75px] flex items-center justify-center z-50">
       <div className="bg-white rounded-[15px] p-6 w-96 max-w-[90vw] max-h-[90vh] overflow-y-auto shadow-lg">
         <h3 className="font-semibold text-lg text-[#232529] mb-4">
           {mode === 'create' ? 'Create New Appointment' : 'Edit Appointment'}
@@ -262,5 +294,17 @@ export default function AppointmentModal({
         </form>
       </div>
     </div>
+    
+    <ConfirmDialog
+      isOpen={showDeleteConfirm}
+      title="Delete Appointment"
+      message={`Are you sure you want to delete the appointment for ${appointment?.clientName}? This action cannot be undone.`}
+      confirmText="Delete"
+      cancelText="Cancel"
+      onConfirm={confirmDelete}
+      onCancel={() => setShowDeleteConfirm(false)}
+      isDestructive={true}
+    />
+    </>
   );
 }

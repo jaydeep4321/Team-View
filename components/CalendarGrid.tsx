@@ -5,6 +5,7 @@ import { ClientAppointment, useApp } from "@/contexts/AppContext";
 import { DndContext, DragEndEvent, pointerWithin } from "@dnd-kit/core";
 import { useDraggable, useDroppable } from "@dnd-kit/core";
 import AppointmentModal from "./AppointmentModal";
+import EmptyState from "./EmptyState";
 import { checkAppointmentConflict } from "@/utils/appointmentUtils";
 
 // Draggable Appointment Component
@@ -89,7 +90,9 @@ const DroppableTimeSlot = ({
         isOver ? "bg-blue-50 border-blue-300 border-dashed" : ""
       }`}
       style={{
-        width: `${(active?.data.current?.appointment?.duration ?? 1) * slotWidth}px`,
+        width: `${
+          (active?.data.current?.appointment?.duration ?? 1) * slotWidth
+        }px`,
         left: `${timeIndex * slotWidth}px`,
         top: `${memberIndex * 32}px`,
       }}
@@ -102,15 +105,23 @@ const DroppableTimeSlot = ({
 };
 
 export default function CalendarGrid() {
-  const { appointments, updateAppointment, teamMembers, statusFilter, teamFilter } = useApp();
-  
+  const {
+    appointments,
+    updateAppointment,
+    teamMembers,
+    statusFilter,
+    teamFilter,
+  } = useApp();
+
   // Utils
   // Import conflict detection lazily at top of file
-  
+
   // Filter appointments based on status and team
-  const filteredAppointments = appointments.filter(appointment => {
-    const statusMatch = statusFilter === "All" || appointment.status === statusFilter;
-    const teamMatch = teamFilter === "All" || appointment.member.toString() === teamFilter;
+  const filteredAppointments = appointments.filter((appointment) => {
+    const statusMatch =
+      statusFilter === "All" || appointment.status === statusFilter;
+    const teamMatch =
+      teamFilter === "All" || appointment.member.toString() === teamFilter;
     return statusMatch && teamMatch;
   });
   const timeSlots = [
@@ -309,8 +320,8 @@ export default function CalendarGrid() {
             {teamMembers.map((member, index) => (
               <div
                 key={member.id}
-                className="absolute flex items-center px-4 h-[32px] border-b border-[#E0E0E0] bg-white w-full"
                 style={{ top: `${index * 32}px` }}
+                className="absolute flex items-center px-4 h-[32px] border-b border-[#E0E0E0] bg-white w-full"
               >
                 {/* Color Indicator */}
                 <div
@@ -335,7 +346,7 @@ export default function CalendarGrid() {
                 top: `${67 + i * 32}px`,
                 left: "0px",
                 width: "180px",
-                border: '0.8px solid #E0E0E0',
+                border: "0.8px solid #E0E0E0",
                 height: 0,
               }}
             />
@@ -372,7 +383,7 @@ export default function CalendarGrid() {
                 style={{
                   top: `${i * 32}px`,
                   width: `${timeSlots.length * slotWidth}px`,
-                  border: '0.8px solid #E0E0E0',
+                  border: "0.8px solid #E0E0E0",
                   height: 0,
                 }}
               />
@@ -387,12 +398,12 @@ export default function CalendarGrid() {
                   left: `${index * slotWidth}px`,
                   top: "0px",
                   height: `${teamMembers.length * 32}px`,
-                  border: '0.8px solid #B8B8B8',
+                  border: "0.8px solid #B8B8B8",
                   width: 0,
                 }}
               />
             ))}
-            
+
             {/* Vertical Grid Lines - Half-hour middle lines (lighter) */}
             {timeSlots.map((_, index) => (
               <div
@@ -402,12 +413,12 @@ export default function CalendarGrid() {
                   left: `${index * slotWidth + slotWidth / 2}px`,
                   top: "0px",
                   height: `${teamMembers.length * 32}px`,
-                  border: '0.8px solid #E0E0E0',
+                  border: "0.8px solid #E0E0E0",
                   width: 0,
                 }}
               />
             ))}
-            
+
             {/* Add final vertical line at the end */}
             <div
               className="absolute pointer-events-none"
@@ -415,7 +426,7 @@ export default function CalendarGrid() {
                 left: `${timeSlots.length * slotWidth}px`,
                 top: "0px",
                 height: `${teamMembers.length * 32}px`,
-                border: '0.8px solid #B8B8B8',
+                border: "0.8px solid #B8B8B8",
                 width: 0,
               }}
             />
@@ -439,6 +450,31 @@ export default function CalendarGrid() {
               onEdit={handleEditAppointment}
             />
           ))}
+
+          {/* Empty state when no appointments */}
+          {filteredAppointments.length === 0 && (
+            <div className="absolute top-[100px] left-[180px] right-0">
+              <EmptyState
+                title="No appointments"
+                message="Double-click on any time slot to create your first appointment"
+                icon={
+                  <svg
+                    className="w-12 h-12"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={1.5}
+                      d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                    />
+                  </svg>
+                }
+              />
+            </div>
+          )}
         </div>
 
         {/* Appointment Modal */}
