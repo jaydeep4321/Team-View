@@ -33,13 +33,13 @@ export default function AppointmentModal({
     description: string;
     startHour: number;
   }>({
-    clientName: appointment?.clientName || '',
-    startTime: appointment?.startTime || '9:00 am',
-    duration: appointment?.duration?.toString() || '1',
-    status: (appointment?.status || 'pending') as AppointmentStatus,
-    member: appointment?.member || (defaultTimeSlot ? defaultTimeSlot.memberIndex + 1 : 1),
-    description: appointment?.description || '',
-    startHour: appointment?.startHour || (defaultTimeSlot ? defaultTimeSlot.timeIndex : 3)
+    clientName: '',
+    startTime: '9:00 am',
+    duration: '1',
+    status: 'pending' as AppointmentStatus,
+    member: 1,
+    description: '',
+    startHour: 3
   });
 
   const [conflicts, setConflicts] = useState<{ hasConflict: boolean; conflictingAppointments: ClientAppointment[] }>({ 
@@ -48,6 +48,52 @@ export default function AppointmentModal({
   });
 
   const timeOptions = generateTimeSlots();
+
+  // Update form data when modal opens or appointment changes (but not when user is editing)
+  useEffect(() => {
+    if (!isOpen) return; // Only run when modal is open
+    
+    if (appointment && mode === 'edit') {
+      // Find the correct time format for the dropdown
+      const timeOption = timeOptions.find(t => t.index === appointment.startHour);
+      const formattedStartTime = timeOption ? timeOption.value : appointment.startTime || '9:00 am';
+      
+      setFormData({
+        clientName: appointment.clientName || '',
+        startTime: formattedStartTime,
+        duration: appointment.duration?.toString() || '1',
+        status: (appointment.status || 'pending') as AppointmentStatus,
+        member: appointment.member || 1,
+        description: appointment.description || '',
+        startHour: appointment.startHour || 3
+      });
+    } else if (mode === 'create' && defaultTimeSlot) {
+      // For create mode, use the time slot from the calendar
+      const timeOption = timeOptions.find(t => t.index === defaultTimeSlot.timeIndex);
+      const formattedStartTime = timeOption ? timeOption.value : '9:00 am';
+      
+      setFormData({
+        clientName: '',
+        startTime: formattedStartTime,
+        duration: '1',
+        status: 'pending' as AppointmentStatus,
+        member: defaultTimeSlot.memberIndex + 1,
+        description: '',
+        startHour: defaultTimeSlot.timeIndex
+      });
+    } else if (mode === 'create') {
+      // Default create mode
+      setFormData({
+        clientName: '',
+        startTime: '9:00 am',
+        duration: '1',
+        status: 'pending' as AppointmentStatus,
+        member: 1,
+        description: '',
+        startHour: 3
+      });
+    }
+  }, [isOpen, appointment?.id, mode]); // Only depend on modal open state, appointment ID, and mode
 
   // Check for conflicts whenever relevant form data changes
   useEffect(() => {
